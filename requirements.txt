@@ -1,0 +1,3 @@
+# Ứng dụng sử dụng thư viện chuẩn của Python 3 và FFmpeg hệ thống.
+# Nếu máy chưa cài FFmpeg trong PATH, cài đặt thư viện dưới đây để tự động tải binary FFmpeg:
+imageio-ffmpeg>=0.5.1

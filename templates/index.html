@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video to GIF Studio — Chuyển đổi mọi định dạng Video sang GIF</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --input-bg: #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: bold;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .brand h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-badge.error {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 880px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Dropzone */
+    .dropzone {
+      border: 2px dashed #475569;
+      border-radius: 14px;
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: rgba(15, 23, 42, 0.45);
+    }
+
+    .dropzone:hover,
+    .dropzone.dragover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    .dropzone-icon {
+      font-size: 2.4rem;
+      margin-bottom: 8px;
+    }
+
+    .dropzone h3 {
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+
+    .dropzone p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .formats-list {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .format-pill {
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+      font-family: monospace;
+    }
+
+    /* Video preview area */
+    .preview-box {
+      margin-top: 18px;
+      display: none;
+    }
+
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      max-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    video,
+    .fallback-thumb {
+      width: 100%;
+      max-height: 320px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .fallback-notice {
+      display: none;
+      font-size: 0.78rem;
+      color: #fbbf24;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+
+    .meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .meta-chip {
+      font-size: 0.78rem;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--card-border);
+      padding: 4px 10px;
+      border-radius: 8px;
+      color: #e2e8f0;
+    }
+
+    /* Form Controls */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 520px) {
+      .controls-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #cbd5e1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .time-pick-btn {
+      font-size: 0.74rem;
+      color: #818cf8;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .time-pick-btn:hover {
+      color: #a5b4fc;
+    }
+
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--input-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 9px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--primary);
+    }
+
+    .btn-primary {
+      margin-top: 18px;
+      width: 100%;
+      padding: 13px 20px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+      font-size: 0.96rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      padding: 9px 14px;
+      border-radius: 9px;
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-size: 0.84rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-success {
+      padding: 10px 18px;
+      border-radius: 9px;
+      border: none;
+      background: var(--accent);
+      color: #052e16;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-success:hover {
+      filter: brightness(1.08);
+    }
+
+    /* Progress Bar */
+    .progress-box {
+      display: none;
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid var(--card-border);
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.84rem;
+      margin-bottom: 8px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background: #0f172a;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #6366f1, #ec4899);
+      transition: width 0.25s ease;
+    }
+
+    .error-alert {
+      display: none;
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      font-size: 0.84rem;
+      white-space: pre-wrap;
+    }
+
+    /* Output Area */
+    .empty-output {
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--text-muted);
+      border: 1px dashed var(--card-border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .result-box {
+      display: none;
+    }
+
+    .gif-preview-container {
+      background: repeating-conic-gradient(#0f172a 0% 25%, #1e293b 0% 50%) 50% / 20px 20px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-height: 380px;
+    }
+
+    .gif-preview-container img {
+      max-width: 100%;
+      max-height: 380px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    /* History list */
+    .history-section {
+      margin-top: 24px;
+      border-top: 1px solid var(--card-border);
+      padding-top: 16px;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      font-size: 0.84rem;
+    }
+
+    .history-item-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .history-item-info img {
+      width: 48px;
+      height: 36px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+    }
+
+    .history-name {
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 210px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">GIF</div>
+        <div>
+          <h1>Video to GIF Studio</h1>
+          <p>Chuyển đổi mọi định dạng Video sang ảnh động GIF chất lượng cao (2-Pass Palette)</p>
+        </div>
+      </div>
+      <div id="ffmpegStatus" class="status-badge">Đang kiểm tra FFmpeg...</div>
+    </header>
+
+    <div class="grid">
+      <!-- Cột trái: Upload + Thiết lập thông số -->
+      <div class="card">
+        <div class="card-title">
+          <span>1. Chọn Video & Thiết lập thông số</span>
+          <button type="button" id="resetBtn" class="btn-secondary" style="display:none; padding: 4px 10px; font-size:0.78rem;">Đổi video khác</button>
+        </div>
+
+        <input type="file" id="fileInput" accept="video/*,.mkv,.avi,.flv,.wmv,.mov,.webm,.m4v,.3gp,.ts,.mpeg,.mpg,.ogv,.vob" hidden />
+
+        <div id="dropzone" class="dropzone">
+          <div class="dropzone-icon">🎬</div>
+          <h3>Kéo thả file Video vào đây hoặc nhấn để chọn</h3>
+          <p>Hỗ trợ mọi định dạng video phổ biến và chuyên dụng</p>
+          <div class="formats-list">
+            <span class="format-pill">MP4</span>
+            <span class="format-pill">MOV</span>
+            <span class="format-pill">MKV</span>
+            <span class="format-pill">AVI</span>
+            <span class="format-pill">WEBM</span>
+            <span class="format-pill">FLV</span>
+            <span class="format-pill">WMV</span>
+            <span class="format-pill">M4V</span>
+            <span class="format-pill">TS</span>
+            <span class="format-pill">3GP</span>
+            <span class="format-pill">MPEG</span>
+          </div>
+        </div>
+
+        <!-- Xem trước video đã tải lên -->
+        <div id="previewBox" class="preview-box">
+          <div class="video-wrapper">
+            <video id="videoPreview" controls playsinline></video>
+            <img id="fallbackThumb" class="fallback-thumb" style="display:none;" alt="Video Thumbnail" />
+          </div>
+          <div id="fallbackNotice" class="fallback-notice">
+            Định dạng video này không phát trực tiếp trên trình duyệt nhưng FFmpeg vẫn đọc và chuyển đổi sang GIF bình thường.
+          </div>
+          <div id="metaBar" class="meta-bar"></div>
+        </div>
+
+        <!-- Tuỳ chỉnh thông số GIF -->
+        <div class="controls-grid">
+          <div class="form-group">
+            <label for="startTime">
+              <span>Bắt đầu từ (giây)</span>
+              <button type="button" class="time-pick-btn" id="pickStartBtn">Lấy vị trí hiện tại</button>
+            </label>
+            <input type="number" id="startTime" min="0" step="0.1" value="0" />
+          </div>
+
+          <div class="form-group">
+            <label for="endTime">
+              <span>Kết thúc ở (giây, 0 = hết video)</span>
+              <button type="button" class="time-pick-btn" id="pickEndBtn">Lấy vị trí hiện tại</button>
+            </label>
+            <input type="number" id="endTime" min="0" step="0.1" value="0" />
+          </div>
+
+          <div class="form-group">
+            <label for="widthSelect">Độ phân giải (Chiều rộng)</label>
+            <select id="widthSelect">
+              <option value="320">320px (Nhỏ gọn, nhẹ)</option>
+              <option value="480" selected>480px (Tiêu chuẩn - Khuyên dùng)</option>
+              <option value="640">640px (Trung bình nét)</option>
+              <option value="720">720px (HD)</option>
+              <option value="1080">1080px (Full HD)</option>
+              <option value="0">Giữ nguyên kích thước gốc</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="fpsSelect">Tốc độ khung hình (FPS)</label>
+            <select id="fpsSelect">
+              <option value="10">10 FPS (Dung lượng nhẹ)</option>
+              <option value="12">12 FPS</option>
+              <option value="15" selected>15 FPS (Mượt & cân bằng)</option>
+              <option value="20">20 FPS (Rất mượt)</option>
+              <option value="24">24 FPS (Chuẩn điện ảnh)</option>
+              <option value="30">30 FPS (Siêu mượt)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="speedSelect">Tốc độ phát (Speed)</label>
+            <select id="speedSelect">
+              <option value="0.5">0.5x (Chậm đi 2 lần)</option>
+              <option value="0.75">0.75x</option>
+              <option value="1.0" selected>1.0x (Tốc độ gốc)</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x (Nhanh hơn)</option>
+              <option value="2.0">2.0x (Tua nhanh x2)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="effectSelect">Hiệu ứng chuyển động</label>
+            <select id="effectSelect">
+              <option value="normal" selected>Bình thường (Chiều xuôi)</option>
+              <option value="reverse">Tua ngược (Reverse)</option>
+              <option value="boomerang">Boomerang (Tiến + Lùi)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="qualitySelect">Chất lượng bảng màu (Palette)</label>
+            <select id="qualitySelect">
+              <option value="sierra2_4a|256" selected>Cao cấp (256 màu - Sierra2)</option>
+              <option value="floyd_steinberg|256">Mịn màng (256 màu - Floyd-Steinberg)</option>
+              <option value="bayer|128">Tối ưu dung lượng (128 màu - Bayer)</option>
+              <option value="none|64">Siêu nhẹ (64 màu - Không hạt)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="loopSelect">Chế độ lặp GIF</label>
+            <select id="loopSelect">
+              <option value="0" selected>Lặp vô hạn (Infinite Loop)</option>
+              <option value="-1">Chỉ chạy 1 lần duy nhất</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="button" id="convertBtn" class="btn-primary" disabled>
+          <span>⚡ Chuyển đổi sang GIF ngay</span>
+        </button>
+
+        <!-- Thanh tiến trình -->
+        <div id="progressBox" class="progress-box">
+          <div class="progress-header">
+            <span id="progressLabel">Đang xử lý...</span>
+            <span id="progressPercent">0%</span>
+          </div>
+          <div class="progress-track">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+        </div>
+
+        <div id="errorAlert" class="error-alert"></div>
+      </div>
+
+      <!-- Cột phải: Kết quả GIF & Lịch sử -->
+      <div class="card">
+        <div class="card-title">
+          <span>2. Kết quả ảnh GIF</span>
+          <button type="button" id="openFolderBtn" class="btn-secondary">📂 Mở thư mục GIF trên máy</button>
+        </div>
+
+        <div id="emptyOutput" class="empty-output">
+          <div style="font-size: 2.6rem; margin-bottom: 10px;">✨</div>
+          <p>Ảnh GIF sau khi chuyển đổi sẽ hiển thị trực tiếp tại đây để bạn xem trước và tải về.</p>
+        </div>
+
+        <div id="resultBox" class="result-box">
+          <div class="gif-preview-container">
+            <img id="gifResultImg" src="" alt="Converted GIF" />
+          </div>
+          <div id="resultMeta" class="meta-bar"></div>
+          <div class="result-actions">
+            <a id="downloadBtn" href="#" class="btn-success" download>⬇️ Tải file GIF về máy</a>
+            <a id="openTabBtn" href="#" target="_blank" class="btn-secondary">🔍 Xem kích thước thật</a>
+          </div>
+        </div>
+
+        <div class="history-section">
+          <div class="card-title" style="margin-bottom: 6px; font-size: 0.94rem;">
+            <span>Lịch sử chuyển đổi trong phiên</span>
+          </div>
+          <div id="historyList" class="history-list">
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Chưa có file nào được chuyển đổi.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const resetBtn = document.getElementById('resetBtn');
+    const previewBox = document.getElementById('previewBox');
+    const videoPreview = document.getElementById('videoPreview');
+    const fallbackThumb = document.getElementById('fallbackThumb');
+    const fallbackNotice = document.getElementById('fallbackNotice');
+    const metaBar = document.getElementById('metaBar');
+
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
+    const pickStartBtn = document.getElementById('pickStartBtn');
+    const pickEndBtn = document.getElementById('pickEndBtn');
+    const widthSelect = document.getElementById('widthSelect');
+    const fpsSelect = document.getElementById('fpsSelect');
+    const speedSelect = document.getElementById('speedSelect');
+    const effectSelect = document.getElementById('effectSelect');
+    const qualitySelect = document.getElementById('qualitySelect');
+    const loopSelect = document.getElementById('loopSelect');
+
+    const convertBtn = document.getElementById('convertBtn');
+    const progressBox = document.getElementById('progressBox');
+    const progressLabel = document.getElementById('progressLabel');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressFill = document.getElementById('progressFill');
+    const errorAlert = document.getElementById('errorAlert');
+
+    const emptyOutput = document.getElementById('emptyOutput');
+    const resultBox = document.getElementById('resultBox');
+    const gifResultImg = document.getElementById('gifResultImg');
+    const resultMeta = document.getElementById('resultMeta');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const openTabBtn = document.getElementById('openTabBtn');
+    const openFolderBtn = document.getElementById('openFolderBtn');
+    const historyList = document.getElementById('historyList');
+    const ffmpegStatus = document.getElementById('ffmpegStatus');
+
+    let currentVideoData = null;
+    let conversionHistory = [];
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes <= 0) return '0 B';
+      const units = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(1024));
+      return (bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 2) + ' ' + units[i];
+    }
+
+    function showError(msg) {
+      if (!msg) {
+        errorAlert.style.display = 'none';
+        errorAlert.textContent = '';
+        return;
+      }
+      errorAlert.textContent = msg;
+      errorAlert.style.display = 'block';
+    }
+
+    function setProgress(visible, labelText = '', pct = 0) {
+      if (!visible) {
+        progressBox.style.display = 'none';
+        return;
+      }
+      progressBox.style.display = 'block';
+      progressLabel.textContent = labelText;
+      progressPercent.textContent = `${pct}%`;
+      progressFill.style.width = `${pct}%`;
+    }
+
+    // Kiểm tra trạng thái FFmpeg
+    fetch('/api/system-info')
+      .then(r => r.json())
+      .then(info => {
+        if (info.ffmpeg_available) {
+          ffmpegStatus.textContent = `✓ FFmpeg sẵn sàng (${info.platform})`;
+          ffmpegStatus.classList.remove('error');
+        } else {
+          ffmpegStatus.textContent = '⚠️ Chưa tìm thấy FFmpeg';
+          ffmpegStatus.classList.add('error');
+        }
+      })
+      .catch(() => {});
+
+    // Mở thư mục xuất trên máy
+    openFolderBtn.addEventListener('click', () => {
+      fetch('/api/open-folder', { method: 'POST' });
+    });
+
+    // Sự kiện kéo thả & chọn file
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFileUpload(e.dataTransfer.files[0]);
+      }
+    });
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files.length > 0) {
+        handleFileUpload(fileInput.files[0]);
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    pickStartBtn.addEventListener('click', () => {
+      if (videoPreview && !isNaN(videoPreview.currentTime)) {
+        startTimeInput.value = videoPreview.currentTime.toFixed(1);
+      }
+    });
+
+    pickEndBtn.addEventListener('click', () => {
+      if (videoPreview && !isNaN(videoPreview.currentTime)) {
+        endTimeInput.value = videoPreview.currentTime.toFixed(1);
+      }
+    });
+
+    function handleFileUpload(file) {
+      showError('');
+      convertBtn.disabled = true;
+      setProgress(true, `Đang tải video "${file.name}" lên...`, 0);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `/api/upload?filename=${encodeURIComponent(file.name)}`, true);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          setProgress(true, `Đang tải video lên (${formatBytes(e.loaded)} / ${formatBytes(e.total)})...`, pct);
+        }
+      };
+
+      xhr.onload = () => {
+        setProgress(false);
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const data = JSON.parse(xhr.responseText);
+          currentVideoData = data;
+          renderVideoPreview(data);
+          convertBtn.disabled = false;
+          resetBtn.style.display = 'inline-flex';
+        } else {
+          let errMsg = 'Không thể tải video lên.';
+          try {
+            errMsg = JSON.parse(xhr.responseText).error || errMsg;
+          } catch (_) {}
+          showError(errMsg);
+        }
+      };
+
+      xhr.onerror = () => {
+        setProgress(false);
+        showError('Lỗi kết nối khi tải video lên máy chủ.');
+      };
+
+      xhr.send(file);
+    }
+
+    function renderVideoPreview(data) {
+      previewBox.style.display = 'block';
+      fallbackNotice.style.display = 'none';
+      fallbackThumb.style.display = 'none';
+      videoPreview.style.display = 'block';
+      videoPreview.src = data.video_url;
+
+      videoPreview.onerror = () => {
+        videoPreview.style.display = 'none';
+        if (data.thumb_url) {
+          fallbackThumb.src = data.thumb_url;
+          fallbackThumb.style.display = 'block';
+        }
+        fallbackNotice.style.display = 'block';
+      };
+
+      const info = data.info || {};
+      startTimeInput.value = 0;
+      endTimeInput.value = info.duration > 0 ? info.duration : 0;
+
+      metaBar.innerHTML = `
+        <span class="meta-chip">📄 ${data.original_name}</span>
+        <span class="meta-chip">📐 ${info.width || '?'}×${info.height || '?'} px</span>
+        <span class="meta-chip">⏱️ ${info.duration || 0} giây</span>
+        <span class="meta-chip">🎞️ ${info.fps || '?'} FPS</span>
+        <span class="meta-chip">💾 ${formatBytes(info.size_bytes)}</span>
+      `;
+    }
+
+    convertBtn.addEventListener('click', async () => {
+      if (!currentVideoData) return;
+      showError('');
+
+      const startVal = parseFloat(startTimeInput.value) || 0;
+      const endVal = parseFloat(endTimeInput.value) || 0;
+      if (endVal > 0 && endVal <= startVal) {
+        showError('Thời gian kết thúc phải lớn hơn thời gian bắt đầu (hoặc để 0 để lấy đến hết video).');
+        return;
+      }
+
+      const [dither, maxColors] = qualitySelect.value.split('|');
+
+      const payload = {
+        saved_name: currentVideoData.saved_name,
+        original_name: currentVideoData.original_name,
+        start_time: startVal,
+        end_time: endVal,
+        width: parseInt(widthSelect.value, 10),
+        fps: parseInt(fpsSelect.value, 10),
+        speed: parseFloat(speedSelect.value),
+        effect: effectSelect.value,
+        dither: dither,
+        max_colors: parseInt(maxColors, 10),
+        loop: parseInt(loopSelect.value, 10),
+      };
+
+      convertBtn.disabled = true;
+      setProgress(true, 'Đang khởi tạo bộ lọc màu Palette & chuyển đổi sang GIF...', 5);
+
+      try {
+        const res = await fetch('/api/convert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const job = await res.json();
+        if (!res.ok) {
+          throw new Error(job.error || 'Lỗi khi bắt đầu chuyển đổi');
+        }
+        pollJobStatus(job.job_id);
+      } catch (err) {
+        setProgress(false);
+        convertBtn.disabled = false;
+        showError(err.message);
+      }
+    });
+
+    function pollJobStatus(jobId) {
+      const timer = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/status/${jobId}`);
+          const data = await res.json();
+          if (!res.ok) {
+            clearInterval(timer);
+            setProgress(false);
+            convertBtn.disabled = false;
+            showError(data.error || 'Không thể kiểm tra trạng thái.');
+            return;
+          }
+
+          if (data.status === 'processing' || data.status === 'queued') {
+            setProgress(true, 'Đang render ảnh động GIF chất lượng cao...', data.progress || 10);
+          } else if (data.status === 'completed') {
+            clearInterval(timer);
+            setProgress(false);
+            convertBtn.disabled = false;
+            displayResult(data);
+          } else if (data.status === 'error') {
+            clearInterval(timer);
+            setProgress(false);
+            convertBtn.disabled = false;
+            showError(data.error || 'Chuyển đổi thất bại.');
+          }
+        } catch (err) {
+          clearInterval(timer);
+          setProgress(false);
+          convertBtn.disabled = false;
+          showError('Mất kết nối tới máy chủ ứng dụng.');
+        }
+      }, 450);
+    }
+
+    function displayResult(data) {
+      emptyOutput.style.display = 'none';
+      resultBox.style.display = 'block';
+
+      const cacheBuster = `?t=${Date.now()}`;
+      gifResultImg.src = data.output_url + cacheBuster;
+      downloadBtn.href = data.download_url;
+      downloadBtn.download = data.output_filename;
+      openTabBtn.href = data.output_url;
+
+      resultMeta.innerHTML = `
+        <span class="meta-chip">✅ ${data.output_filename}</span>
+        <span class="meta-chip">📐 ${data.output_width || '?'}×${data.output_height || '?'} px</span>
+        <span class="meta-chip">💾 ${formatBytes(data.output_size)}</span>
+        <span class="meta-chip">🕒 Hoàn tất lúc ${data.completed_at}</span>
+      `;
+
+      conversionHistory.unshift(data);
+      renderHistory();
+    }
+
+    function renderHistory() {
+      if (conversionHistory.length === 0) return;
+      historyList.innerHTML = conversionHistory.map(item => `
+        <div class="history-item">
+          <div class="history-item-info">
+            <img src="${item.output_url}" alt="GIF" />
+            <div>
+              <div class="history-name" title="${item.output_filename}">${item.output_filename}</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">
+                ${item.output_width || '?'}×${item.output_height || '?'} px • ${formatBytes(item.output_size)}
+              </div>
+            </div>
+          </div>
+          <a href="${item.download_url}" class="btn-secondary" download="${item.output_filename}">⬇️ Tải về</a>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>
