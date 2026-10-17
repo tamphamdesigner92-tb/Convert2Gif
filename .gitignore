@@ -1,0 +1,9 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Dữ liệu người dùng tải lên và file GIF xuất ra
+uploads/
+outputs/
